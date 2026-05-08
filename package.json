@@ -1,0 +1,27 @@
+{
+  "name": "hugo-prospector",
+  "version": "1.0.0",
+  "description": "HUGO — Hunter Inteligente de Leads. Prospecta profissionais com clínica via Google Maps + Instagram + LinkedIn, qualifica com score 0-100 e exporta em CSV ou envia pra CRM (LeadFlow).",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "run-once": "node src/run-once.js",
+    "init-db": "node src/init-db.js"
+  },
+  "keywords": ["lead-generation", "scraping", "playwright", "prospecting"],
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "node-cron": "^4.2.1",
+    "playwright": "^1.59.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HUGO — Hunter Inteligente de Leads</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{hugo:'#059669',hugoLight:'#34D399',hugoDark:'#047857'}}}}</script>
+  <style>
+    body{font-family:'Inter',system-ui,sans-serif;background:#F0FDF4}
+    .card{transition:all .2s;background:#fff;border-radius:12px;border:1px solid #E5E7EB}
+    .card:hover{box-shadow:0 4px 20px rgba(5,150,105,.1)}
+    .badge{font-size:.65rem;padding:2px 8px;border-radius:9999px;font-weight:600;text-transform:uppercase}
+    .tab-active{border-bottom:2px solid #059669;color:#059669;font-weight:600}
+    .progress-bar{height:6px;border-radius:3px;background:#E5E7EB;overflow:hidden}
+    .progress-fill{height:100%;border-radius:3px;transition:width .5s}
+    .score-a{background:#D1FAE5;color:#065F46}.score-b{background:#DBEAFE;color:#1E40AF}
+    .score-c{background:#FEF3C7;color:#92400E}.score-d{background:#FEE2E2;color:#991B1B}
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen">
+  <header class="bg-white border-b border-gray-200 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🎯</span>
+        <h1 class="text-xl font-bold text-gray-900">HUGO</h1>
+        <span class="text-xs text-gray-400" id="nicheLabel">Hunter Inteligente de Leads</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-400" id="lastRunTime">--</span>
+        <button onclick="runNow()" class="px-3 py-1.5 bg-hugo text-white text-sm rounded-lg hover:bg-hugoDark" id="runBtn">Executar Agora</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="bg-white border-b border-gray-100 px-6 py-3">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+      <div><p class="text-2xl font-bold text-hugo" id="sTotal">0</p><p class="text-xs text-gray-500">Total Leads</p></div>
+      <div><p class="text-2xl font-bold text-hugo" id="sQual">0</p><p class="text-xs text-gray-500">Qualificados</p></div>
+      <div><p class="text-2xl font-bold text-hugo" id="sCRM">0</p><p class="text-xs text-gray-500">No CRM</p></div>
+      <div><p class="text-2xl font-bold text-hugo" id="sRuns">0</p><p class="text-xs text-gray-500">Execuções</p></div>
+      <div><p class="text-2xl font-bold text-amber-500" id="sIG">0</p><p class="text-xs text-gray-500">IG Fraco</p></div>
+    </div>
+  </div>
+
+  <div class="bg-white border-b border-gray-200 px-6">
+    <div class="max-w-7xl mx-auto flex gap-6 text-sm text-gray-500">
+      <button class="py-3 tab-active" onclick="showTab('overview')" id="tab-overview">Visão Geral</button>
+      <button class="py-3" onclick="showTab('leads')" id="tab-leads">Leads</button>
+      <button class="py-3" onclick="showTab('ig-opp')" id="tab-ig-opp">IG Fraco</button>
+      <button class="py-3" onclick="showTab('cities')" id="tab-cities">Cidades</button>
+      <button class="py-3" onclick="showTab('specs')" id="tab-specs">Nichos</button>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-6 py-6">
+    <div id="content-overview">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="card p-5 col-span-2">
+          <h3 class="font-semibold text-gray-800 mb-3">Última Execução</h3>
+          <div id="lastRunInfo" class="text-sm text-gray-500">Carregando...</div>
+        </div>
+        <div class="card p-5">
+          <h3 class="font-semibold text-gray-800 mb-3">Por Fonte</h3>
+          <div id="sourceStats" class="space-y-3"></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+        <div class="card p-5"><h3 class="font-semibold text-gray-800 mb-3">Top Nichos</h3><div id="specStats" class="space-y-2"></div></div>
+        <div class="card p-5"><h3 class="font-semibold text-gray-800 mb-3">Top Cidades</h3><div id="cityStats" class="space-y-2"></div></div>
+      </div>
+      <div class="card p-5 mt-5">
+        <h3 class="font-semibold text-gray-800 mb-3">Histórico de Execuções</h3>
+        <table class="w-full text-sm"><thead><tr class="text-left text-gray-400 text-xs border-b">
+          <th class="pb-2">Data</th><th class="pb-2">Status</th><th class="pb-2">Fontes</th>
+          <th class="pb-2">Encontrados</th><th class="pb-2">Qualificados</th><th class="pb-2">Output</th>
+        </tr></thead><tbody id="runsTable"><tr><td colspan="6" class="py-4 text-gray-400">Carregando...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div id="content-leads" class="hidden">
+      <div class="card p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <h3 class="font-semibold text-gray-800">Leads Qualificados</h3>
+          <select onchange="loadLeads(this.value)" class="border rounded-lg px-3 py-1 text-sm">
+            <option value="">Todos</option><option value="google_maps">Google Maps</option>
+            <option value="linkedin">LinkedIn</option><option value="instagram">Instagram</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-gray-400 text-xs border-b">
+          <th class="pb-2">Nome</th><th class="pb-2">Nicho</th><th class="pb-2">Cidade</th>
+          <th class="pb-2">Fonte</th><th class="pb-2">Score</th><th class="pb-2">Instagram</th><th class="pb-2">CRM</th>
+        </tr></thead><tbody id="leadsTable"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="content-ig-opp" class="hidden">
+      <div class="card p-5">
+        <h3 class="font-semibold text-gray-800 mb-2">Profissionais com Instagram Fraco (&lt;1K seguidores)</h3>
+        <p class="text-sm text-gray-400 mb-4">Oportunidade de oferecer pacote de posicionamento digital.</p>
+        <div id="igOppList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <div id="content-cities" class="hidden">
+      <div class="card p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <h3 class="font-semibold text-gray-800">Cidades Monitoradas</h3>
+          <button onclick="document.getElementById('addCityForm').classList.toggle('hidden')" class="px-3 py-1 bg-hugo text-white text-xs rounded-lg">+ Adicionar</button>
+        </div>
+        <div id="addCityForm" class="hidden mb-4 flex gap-2">
+          <input id="newCity" placeholder="Cidade" class="border rounded-lg px-3 py-1.5 text-sm flex-1">
+          <input id="newState" placeholder="UF" class="border rounded-lg px-3 py-1.5 text-sm w-20">
+          <button onclick="addCity()" class="px-3 py-1.5 bg-hugo text-white text-sm rounded-lg">Salvar</button>
+        </div>
+        <div id="citiesList" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+      </div>
+    </div>
+
+    <div id="content-specs" class="hidden">
+      <div class="card p-5">
+        <h3 class="font-semibold text-gray-800 mb-4">Nichos Monitorados</h3>
+        <div id="specsList" class="space-y-3"></div>
+      </div>
+    </div>
+  </main>
+
+<script>
+const API='/api';
+const SRC_ICONS={google_maps:'📍',linkedin:'💼',instagram:'📸'};
+
+async function api(p,o={}){const r=await fetch(API+p,{...o,headers:{'Content-Type':'application/json',...(o.headers||{})}});return r.json()}
+
+function showTab(t){
+  document.querySelectorAll('[id^="content-"]').forEach(e=>e.classList.add('hidden'));
+  document.querySelectorAll('[id^="tab-"]').forEach(e=>{e.classList.remove('tab-active')});
+  document.getElementById('content-'+t).classList.remove('hidden');
+  document.getElementById('tab-'+t).classList.add('tab-active');
+}
+
+async function loadAll(){await Promise.all([loadStatus(),loadStats(),loadRuns(),loadLeads(),loadCities(),loadSpecs()])}
+
+async function loadStatus(){
+  const d=await api('/status');
+  if(d.config?.niche){document.getElementById('nicheLabel').textContent='Caçando: '+d.config.niche}
+  if(d.stats){
+    document.getElementById('sTotal').textContent=d.stats.totalLeads;
+    document.getElementById('sQual').textContent=d.stats.qualifiedLeads;
+    document.getElementById('sCRM').textContent=d.stats.sentCRM;
+    document.getElementById('sRuns').textContent=d.stats.totalRuns;
+  }
+  if(d.lastRun){
+    document.getElementById('lastRunTime').textContent=timeAgo(d.lastRun.started_at);
+    const lr=d.lastRun;
+    document.getElementById('lastRunInfo').innerHTML=`
+      <div class="grid grid-cols-3 gap-3 text-center mb-3">
+        <div><p class="text-lg font-bold text-hugo">${lr.leads_found}</p><p class="text-xs text-gray-400">Encontrados</p></div>
+        <div><p class="text-lg font-bold text-hugo">${lr.leads_qualified}</p><p class="text-xs text-gray-400">Qualificados</p></div>
+        <div><p class="text-lg font-bold text-hugo">${lr.leads_sent_crm}</p><p class="text-xs text-gray-400">No CRM</p></div>
+      </div>
+      <div class="flex gap-2 flex-wrap">${(lr.sources_used||[]).map(s=>`<span class="badge bg-green-50 text-green-700">${SRC_ICONS[s]||''} ${s}</span>`).join('')}</div>
+      <p class="text-xs text-gray-400 mt-2">Status: <span class="${lr.status==='completed'?'text-green-600':'text-red-500'}">${lr.status}</span> · ${timeAgo(lr.started_at)}</p>`;
+  }
+}
+
+async function loadStats(){
+  const d=await api('/leads/stats');
+  const srcEl=document.getElementById('sourceStats');
+  if(d.bySource?.length){
+    const mx=Math.max(...d.bySource.map(s=>s.total));
+    srcEl.innerHTML=d.bySource.map(s=>`<div><div class="flex justify-between text-xs mb-1"><span>${SRC_ICONS[s.source]||''} ${s.source}</span><span class="text-gray-400">${s.qualified}/${s.total}</span></div><div class="progress-bar"><div class="progress-fill bg-hugo" style="width:${Math.round(s.total/mx*100)}%"></div></div></div>`).join('');
+  }
+  const specEl=document.getElementById('specStats');
+  if(d.bySpecialty?.length){
+    const mx=Math.max(...d.bySpecialty.map(s=>s.qualified||0));
+    specEl.innerHTML=d.bySpecialty.slice(0,8).map(s=>`<div><div class="flex justify-between text-xs mb-1"><span>🎯 ${s.specialty}</span><span class="text-gray-400">${s.qualified}</span></div><div class="progress-bar"><div class="progress-fill bg-hugo" style="width:${Math.round((s.qualified||0)/(mx||1)*100)}%"></div></div></div>`).join('');
+  }
+  const cityEl=document.getElementById('cityStats');
+  if(d.byCity?.length){
+    const mx=Math.max(...d.byCity.map(c=>c.qualified||0));
+    cityEl.innerHTML=d.byCity.slice(0,8).map(c=>`<div><div class="flex justify-between text-xs mb-1"><span>📌 ${c.city}/${c.state}</span><span class="text-gray-400">${c.qualified}</span></div><div class="progress-bar"><div class="progress-fill bg-hugo" style="width:${Math.round((c.qualified||0)/(mx||1)*100)}%"></div></div></div>`).join('');
+  }
+  document.getElementById('sIG').textContent=d.igOpportunities?.length||0;
+  const igEl=document.getElementById('igOppList');
+  if(d.igOpportunities?.length){
+    igEl.innerHTML=d.igOpportunities.map(l=>`<div class="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200"><div><span class="font-medium text-sm">${l.name}</span><span class="text-xs text-gray-400 ml-2">${l.specialty}</span><br><span class="text-xs">📸 @${l.instagram} — ${l.instagram_followers} seguidores · 📌 ${l.city||'?'} · Score: ${l.score}</span></div><span class="badge bg-amber-100 text-amber-800">IG Fraco</span></div>`).join('');
+  }else{igEl.innerHTML='<p class="text-gray-400 text-sm">Nenhuma oportunidade detectada ainda.</p>'}
+}
+
+async function loadRuns(){
+  const runs=await api('/runs?limit=10');
+  const tb=document.getElementById('runsTable');
+  if(!runs.length){tb.innerHTML='<tr><td colspan="6" class="py-4 text-gray-400">Nenhuma execução</td></tr>';return}
+  tb.innerHTML=runs.map(r=>`<tr class="border-b border-gray-50"><td class="py-2 text-gray-600">${timeAgo(r.started_at)}</td><td><span class="badge ${r.status==='completed'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${r.status}</span></td><td>${(r.sources_used||[]).map(s=>SRC_ICONS[s]||s).join(' ')}</td><td class="font-medium">${r.leads_found}</td><td>${r.leads_qualified}</td><td>${r.leads_sent_crm}</td></tr>`).join('');
+}
+
+async function loadLeads(source){
+  const q=source?`?qualified_only=true&source=${source}&sort=score`:'?qualified_only=true&sort=score&limit=50';
+  const leads=await api('/leads'+q);
+  const tb=document.getElementById('leadsTable');
+  if(!leads.length){tb.innerHTML='<tr><td colspan="7" class="py-4 text-gray-400">Nenhum lead qualificado ainda</td></tr>';return}
+  tb.innerHTML=leads.map(l=>{
+    const sc=l.score>=80?'score-a':l.score>=60?'score-b':l.score>=50?'score-c':'score-d';
+    return`<tr class="border-b border-gray-50 hover:bg-gray-50"><td class="py-2"><div class="font-medium text-sm">${l.name||'—'}</div><div class="text-xs text-gray-400">${l.clinic_name||''}</div></td><td class="text-sm">${l.specialty||'—'}</td><td class="text-sm">${l.city?l.city+'/'+l.state:'—'}</td><td><span class="badge bg-gray-100">${SRC_ICONS[l.source]||''} ${l.source}</span></td><td><span class="badge ${sc}">${l.score}</span></td><td class="text-xs">${l.instagram?'@'+l.instagram+' ('+l.instagram_followers+')':'—'}</td><td>${l.sent_to_crm?'<span class="text-green-500 text-xs">✓ CRM</span>':'<span class="text-gray-300 text-xs">—</span>'}</td></tr>`
+  }).join('');
+}
+
+async function loadCities(){
+  const cities=await api('/cities');
+  document.getElementById('citiesList').innerHTML=cities.map(c=>`<div class="flex items-center justify-between p-3 rounded-lg border ${c.is_active?'border-hugo bg-green-50':'border-gray-200 bg-gray-50 opacity-60'}"><div><span class="font-medium text-sm">📌 ${c.city}/${c.state}</span>${c.last_scraped?'<br><span class="text-xs text-gray-400">Último: '+timeAgo(c.last_scraped)+'</span>':''}</div><button onclick="toggleCity(${c.id},${c.is_active?0:1})" class="text-xs ${c.is_active?'text-red-400':'text-green-500'}">${c.is_active?'Pausar':'Ativar'}</button></div>`).join('');
+}
+
+async function loadSpecs(){
+  const specs=await api('/specialties');
+  document.getElementById('specsList').innerHTML=specs.map(s=>`<div class="flex items-center justify-between p-3 rounded-lg border border-gray-200"><div><span class="font-medium text-sm">🎯 ${s.name}</span><span class="text-xs text-gray-400 ml-2">P${s.priority}</span><br><span class="text-xs text-gray-400">Termos: ${(s.search_terms||[]).join(', ')}</span></div><span class="badge ${s.is_active?'bg-green-100 text-green-700':'bg-gray-100 text-gray-500'}">${s.is_active?'Ativo':'Pausado'}</span></div>`).join('');
+}
+
+async function runNow(){
+  const b=document.getElementById('runBtn');b.disabled=true;b.textContent='Executando...';b.classList.add('opacity-50');
+  try{await api('/run',{method:'POST'});setTimeout(loadAll,2000)}catch(e){alert('Erro: '+e.message)}
+  setTimeout(()=>{b.disabled=false;b.textContent='Executar Agora';b.classList.remove('opacity-50')},2000);
+}
+
+async function addCity(){
+  const city=document.getElementById('newCity').value.trim();
+  const state=document.getElementById('newState').value.trim().toUpperCase();
+  if(!city||!state)return;
+  await api('/cities',{method:'POST',body:JSON.stringify({city,state})});
+  document.getElementById('newCity').value='';document.getElementById('newState').value='';
+  document.getElementById('addCityForm').classList.add('hidden');loadCities();
+}
+
+async function toggleCity(id,active){await api('/cities/'+id,{method:'PUT',body:JSON.stringify({is_active:active})});loadCities()}
+
+function timeAgo(d){if(!d)return'—';const s=(Date.now()-new Date(d+'Z'))/1e3;if(s<60)return'agora';if(s<3600)return Math.floor(s/60)+'min';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
+
+loadAll();setInterval(loadAll,60000);
+</script>
+</body>
+</html>
